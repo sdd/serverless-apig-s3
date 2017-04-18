@@ -1,52 +1,37 @@
 'use strict';
+const _ = require('lodash');
+const path = require('path');
 
-class ServerlessPlugin {
-  constructor(serverless, options) {
-    this.serverless = serverless;
-    this.options = options;
+class ServerlessApigS3 {
 
-    this.commands = {
-      welcome: {
-        usage: 'Helps you start your first Serverless plugin',
-        lifecycleEvents: [
-          'hello',
-          'world',
-        ],
-        options: {
-          message: {
-            usage:
-              'Specify the message you want to deploy '
-              + '(e.g. "--message \'My Message\'" or "-m \'My Message\'")',
-            required: true,
-            shortcut: 'm',
-          },
-        },
-      },
-    };
+    constructor(serverless, options) {
 
-    this.hooks = {
-      'before:welcome:hello': this.beforeWelcome.bind(this),
-      'welcome:hello': this.welcomeUser.bind(this),
-      'welcome:world': this.displayHelloMessage.bind(this),
-      'after:welcome:world': this.afterHelloWorld.bind(this),
-    };
-  }
+        this.serverless = serverless;
+        this.options = options;
 
-  beforeWelcome() {
-    this.serverless.cli.log('Hello from Serverless!');
-  }
+        this.log = serverless.cli.log.bind(serverless.cli);
+        this.yamlParser = serverless.yamlParser;
 
-  welcomeUser() {
-    this.serverless.cli.log('Your message:');
-  }
+        this.commands = {};
 
-  displayHelloMessage() {
-    this.serverless.cli.log(`${this.options.message}`);
-  }
+        this.hooks = {
+            'before:deploy:createDeploymentArtifacts': this.mergeApigS3Resources.bind(this),
+        };
+    }
 
-  afterHelloWorld() {
-    this.serverless.cli.log('Please come again!');
-  }
+    async mergeApigS3Resources() {
+
+        const ownResources = await this.yamlParser.parse(
+            path.resolve(__dirname, 'resources.yml')
+        );
+
+        _.merge(
+            this.serverless.service.provider.compiledCloudFormationTemplate.Resources,
+            ownResources
+        );
+
+        return Promise.resolve();
+    }
 }
 
-module.exports = ServerlessPlugin;
+module.exports = ServerlessApigS3;
