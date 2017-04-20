@@ -1,121 +1,126 @@
-S3BucketFrontEnd:
-  Type: AWS::S3::Bucket
-  Properties:
-    AccessControl: PublicRead
-IamRoleApiGatewayS3:
-  Type: AWS::IAM::Role
-  Properties:
-    RoleName: role-apig-s3-read
-    Path: /
-    AssumeRolePolicyDocument:
-      Version: '2012-10-17'
-      Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-              - apigateway.amazonaws.com
-          Action:
-            - "sts:AssumeRole"
-    Policies:
-      - PolicyName: policy-apig-s3-read
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-            - Effect: Allow
-              Action:
-                - "s3:get*"
-                - "s3:list*"
-              Resource: "*"
-ApiGatewayResourceAssets:
-  Type: AWS::ApiGateway::Resource
-  Properties:
-    ParentId:
-      Fn::GetAtt:
-        - ApiGatewayRestApi
-        - RootResourceId
-    PathPart: assets
-    RestApiId:
-      Ref: ApiGatewayRestApi
-ApiGatewayResourceAssetsItem:
-  Type: AWS::ApiGateway::Resource
-  Properties:
-    ParentId:
-      Ref:
-        ApiGatewayResourceAssets
-    PathPart: "{item}"
-    RestApiId:
-      Ref: ApiGatewayRestApi
-ApiGatewayMethodAssetsItemGet:
-  Type: AWS::ApiGateway::Method
-  Properties:
-    AuthorizationType: NONE
-    HttpMethod: GET
-    RequestParameters:
-      method.request.path.item: true
-    MethodResponses:
-      - StatusCode: 200
-        ResponseParameters:
-          method.response.header.Content-Type: true
-          method.response.header.Content-Length: true
-    Integration:
-      Type: AWS
-      IntegrationHttpMethod: GET
-      Credentials:
+Resources:
+  S3BucketFrontEnd:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+  IamRoleApiGatewayS3:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-apig-s3-read
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: policy-apig-s3-read
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:get*"
+                  - "s3:list*"
+                Resource: "*"
+  ApiGatewayResourceAssets:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
         Fn::GetAtt:
-          - IamRoleApiGatewayS3
-          - Arn
-      Uri:
-        Fn::Join:
-         - ""
-         - - "arn:aws:apigateway:"
-           - Ref: AWS::Region
-           - ":s3:path/"
-           - Ref: S3BucketFrontEnd
-           - "/{object}"
+          - ApiGatewayRestApi
+          - RootResourceId
+      PathPart: assets
+      RestApiId:
+        Ref: ApiGatewayRestApi
+  ApiGatewayResourceAssetsItem:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId:
+        Ref:
+          ApiGatewayResourceAssets
+      PathPart: "{item}"
+      RestApiId:
+        Ref: ApiGatewayRestApi
+  ApiGatewayMethodAssetsItemGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
       RequestParameters:
-        integration.request.path.object: method.request.path.item
-      IntegrationResponses:
+        method.request.path.item: true
+      MethodResponses:
         - StatusCode: 200
           ResponseParameters:
-            method.response.header.Content-Type: "integration.response.header.Content-Type"
-            method.response.header.Content-Length: "integration.response.header.Content-Length"
-    ResourceId:
-      Ref: ApiGatewayResourceAssetsItem
-    RestApiId:
-      Ref: ApiGatewayRestApi
-ApiGatewayMethodIndexGet:
-  Type: AWS::ApiGateway::Method
-  Properties:
-    AuthorizationType: NONE
-    HttpMethod: GET
-    MethodResponses:
-      - StatusCode: 200
-        ResponseParameters:
-          method.response.header.Content-Type: true
-          method.response.header.Content-Length: true
-    Integration:
-      Type: AWS
-      IntegrationHttpMethod: GET
-      Credentials:
+            method.response.header.Content-Type: true
+            method.response.header.Content-Length: true
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: GET
+        Credentials:
+          Fn::GetAtt:
+            - IamRoleApiGatewayS3
+            - Arn
+        Uri:
+          Fn::Join:
+           - ""
+           - - "arn:aws:apigateway:"
+             - Ref: AWS::Region
+             - ":s3:path/"
+             - Ref: S3BucketFrontEnd
+             - "/{object}"
+        RequestParameters:
+          integration.request.path.object: method.request.path.item
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Content-Type: "integration.response.header.Content-Type"
+              method.response.header.Content-Length: "integration.response.header.Content-Length"
+      ResourceId:
+        Ref: ApiGatewayResourceAssetsItem
+      RestApiId:
+        Ref: ApiGatewayRestApi
+  ApiGatewayMethodIndexGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: GET
+      MethodResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Content-Type: true
+            method.response.header.Content-Length: true
+      Integration:
+        Type: AWS
+        IntegrationHttpMethod: GET
+        Credentials:
+          Fn::GetAtt:
+            - IamRoleApiGatewayS3
+            - Arn
+        Uri:
+          Fn::Join:
+           - ""
+           - - "arn:aws:apigateway:"
+             - Ref: AWS::Region
+             - ":s3:path/"
+             - Ref: S3BucketFrontEnd
+             - "/index.html"
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Content-Type: "integration.response.header.Content-Type"
+              method.response.header.Content-Length: "integration.response.header.Content-Length"
+      ResourceId:
         Fn::GetAtt:
-          - IamRoleApiGatewayS3
-          - Arn
-      Uri:
-        Fn::Join:
-         - ""
-         - - "arn:aws:apigateway:"
-           - Ref: AWS::Region
-           - ":s3:path/"
-           - Ref: S3BucketFrontEnd
-           - "/index.html"
-      IntegrationResponses:
-        - StatusCode: 200
-          ResponseParameters:
-            method.response.header.Content-Type: "integration.response.header.Content-Type"
-            method.response.header.Content-Length: "integration.response.header.Content-Length"
-    ResourceId:
-      Fn::GetAtt:
-        - ApiGatewayRestApi
-        - RootResourceId
-    RestApiId:
-      Ref: ApiGatewayRestApi
+          - ApiGatewayRestApi
+          - RootResourceId
+      RestApiId:
+        Ref: ApiGatewayRestApi
+Outputs:
+  S3BucketFrontEndName:
+    Value:
+      Ref: S3BucketFrontEnd
