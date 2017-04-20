@@ -36,4 +36,4 @@ custom:
 
 There are none! Seriously though, if you need any, just raise a PR or an Issue.
 
-Something missing? More documentation? All PRs welcome at https://github.com/sdd/serverless-dynalite
+Something missing? More documentation? All PRs welcome at https://github.com/sdd/serverless-apig-s3
