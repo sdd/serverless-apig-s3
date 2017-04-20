@@ -3,7 +3,7 @@ const _ = require('lodash');
 const pify = require('pify');
 const path = require('path');
 const fs = pify(require('fs'));
-const mmm = pify((new (require('mmmagic').Magic)).detectFile);
+const magic = new (require('mmmagic').Magic)();
 
 class ServerlessApigS3 {
 
@@ -39,14 +39,14 @@ class ServerlessApigS3 {
                 this.serverless.cli.log(this.commands.client.usage);
             },
 
-            'client:deploy:deploy': () => {
-                this.initDeploy();
+            'client:deploy:deploy': async () => {
+                await this.initDeploy();
                 return this.deploy();
             }
         };
     }
 
-    initDeploy() {
+    async initDeploy() {
         const Utils = this.serverless.utils;
         const Error = this.serverless.classes.Error;
 
@@ -56,10 +56,22 @@ class ServerlessApigS3 {
             throw new Error(`Could not find "client/${ dist } folder in your project root.`);
         }
 
-        console.log(this.serverless.service.provider);
+        const StackName = this.aws.naming.getStackName(this.options.stage);
 
-        this.bucketName = 'auth-dev-s3bucketfrontend-16f8dufo06c45'; //this.serverless.service.provider.compiledCloudFormationTemplate
-            //.Outputs.S3BucketFrontEndName.Value;
+        const { Stacks } = await this.aws.request(
+            'CloudFormation',
+            'describeStacks',
+            { StackName },
+            this.options.stage,
+            this.options.region
+        );
+
+        const { Outputs } = _.find(Stacks, { StackName });
+        const { OutputValue } = _.find(Outputs, { OutputKey: 'S3BucketFrontEndName' });
+
+        this.log('Target Bucket: ' + JSON.stringify(OutputValue, null, 2));
+
+        this.bucketName = OutputValue;
         this.clientPath = path.join(this.serverless.config.servicePath, dist);
     }
 
@@ -78,42 +90,32 @@ class ServerlessApigS3 {
     async deploy() {
         this.log('Deploying client to stage "' + this.stage + '" in region "' + this.region + '"...');
 
-        const buckets = await this.s3Request('listBuckets');
+        const { Buckets } = await this.s3Request('listBuckets');
 
-        console.log(JSON.stringify(buckets));
-
-        const bucket = _.find(buckets.Buckets, { Name: this.bucketName }).Name;
+        const bucket = _.find(Buckets, { Name: this.bucketName }).Name;
         if (!bucket) {
             throw new Error(`Bucket "${ this.bucketName }" not found! Re-deploy`);
         }
 
         await this.purgeBucket(bucket);
         await this.uploadFolderToBucket(this.clientPath, bucket);
+
+        this.log('Deployment complete.');
     }
 
     async purgeBucket(Bucket) {
         const params = { Bucket };
-
-        console.log('purge: ', params);
-
         const { Contents } = await this.s3Request('listObjectsV2', params);
 
-        console.log('objects: ', Contents);
-
+        if (!Contents.length) { return; }
         const Objects = Contents.map(({ Key }) => ({ Key }));
 
-        if (!Objects.length) { return; }
-
         params.Delete = { Objects };
-
-        console.log('delete: ', params);
-
         await this.s3Request('deleteObjects', params);
     }
 
     async uploadFolderToBucket(folder, bucket) {
-        const dirContents = _.map(
-            await fs.readdir(folder),
+        const dirContents = _.map(await fs.readdir(folder),
             name => path.join(folder, name)
         );
 
@@ -132,18 +134,15 @@ class ServerlessApigS3 {
 
     async uploadFileToBucket(filePath, Bucket) {
 
-        const [ Body, ContentType ] = Promise.all([
+        const [ Body, ContentType ] = await Promise.all([
             fs.readFile(filePath),
-            mmm(filePath)
+            getMimeType(filePath)
         ]);
 
         const Key = filePath.replace(this.clientPath, '').substr(1).replace('\\', '/');
 
-        const params = { Bucket, Body, ContentType, Key };
-
-        console.log('putObject: ', params);
-
-        await this.s3Request('putObject', params);
+        this.log(`uploading ${ Key }`);
+        await this.s3Request('putObject', { Bucket, Body, ContentType, Key });
     }
 
     s3Request(fn, params = {}) {
@@ -152,3 +151,9 @@ class ServerlessApigS3 {
 }
 
 module.exports = ServerlessApigS3;
+
+function getMimeType(filePath) {
+    return new Promise(
+        (res, rej) => magic.detectFile(filePath, (err, data) => err ? rej(err) : res(data))
+    );
+}

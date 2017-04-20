@@ -22,6 +22,8 @@
   "homepage": "https://github.com/sdd/serverless-apig-s3#readme",
   "dependencies": {
     "lodash": "^4.17.4",
-    "mmmagic": "^0.4.5"
-  }
+    "mmmagic": "^0.4.5",
+    "pify": "^2.3.0"
+  },
+  "devDependencies": {}
 }
