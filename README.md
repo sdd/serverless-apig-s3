@@ -5,8 +5,8 @@ content and deploying your client-side bundle.
 
 It creates an S3 bucket to hold your front-end content, and adds two routes to API Gateway:
 
- * GET / => bucket/index.html
- * GET /assets/* => bucket/*
+ * `GET / => bucket/index.html`
+ * `GET /assets/* => bucket/*`
 
 This allows your API and front-end assets to be served from the same domain, sidestepping
 any CORS issues. CloudFront is also not used. The combination of these two properties
