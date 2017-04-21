@@ -18,7 +18,7 @@ makes this plugin a good fit for a dev stage environment.
 npm i -D serverless-apig-s3
 ```
 
-This plugin requires node > 7.6 because fuck callbacks, async / await all the way.
+This plugin requires node > 7.6 because fuck callbacks.
 
 ### Configuration
 
