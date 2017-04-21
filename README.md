@@ -18,6 +18,8 @@ makes this plugin a good fit for a dev stage environment.
 npm i -D serverless-apig-s3
 ```
 
+This plugin requires node > 7.6 because fuck callbacks, async / await all the way.
+
 ### Configuration
 
 serverless.yml:
@@ -31,6 +33,12 @@ custom:
     dist: client/dist    # path within service to find content to upload (default: client/dist
 ```
 
+### Usage
+
+```bash
+sls deploy    # ensure that sls deploy has been run so that this plugin's resources exist.
+sls client deploy    # uploads client build artifacts to s3
+```
 
 ### Options:
 

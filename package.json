@@ -25,5 +25,6 @@
     "mmmagic": "^0.4.5",
     "pify": "^2.3.0"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "engines" : { "node" : ">=7.6" }
 }
