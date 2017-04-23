@@ -1,6 +1,6 @@
 {
   "name": "serverless-apig-s3",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "automates the process of both configuring AWS to serve static front-end content and deploying your client-side bundle.",
   "main": "index.js",
   "scripts": {
@@ -25,8 +25,7 @@
     "mime-types": "^2.1.15",
     "pify": "^2.3.0"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=7.6"
   }
