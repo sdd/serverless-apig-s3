@@ -27,6 +27,16 @@ Resources:
                   - "s3:get*"
                   - "s3:list*"
                 Resource: "*"
+  ApiGatewayResourceDefaultRoute:
+      Type: AWS::ApiGateway::Resource
+      Properties:
+        ParentId:
+          Fn::GetAtt:
+            - ApiGatewayRestApi
+            - RootResourceId
+        PathPart: "{path+}"
+        RestApiId:
+          Ref: ApiGatewayRestApi
   ApiGatewayResourceAssets:
     Type: AWS::ApiGateway::Resource
     Properties:
@@ -43,7 +53,7 @@ Resources:
       ParentId:
         Ref:
           ApiGatewayResourceAssets
-      PathPart: "{item}"
+      PathPart: "{item+}"
       RestApiId:
         Ref: ApiGatewayRestApi
   ApiGatewayMethodAssetsItemGet:
@@ -120,6 +130,40 @@ Resources:
           - RootResourceId
       RestApiId:
         Ref: ApiGatewayRestApi
+  ApiGatewayMethodDefaultRouteGet:
+      Type: AWS::ApiGateway::Method
+      Properties:
+        AuthorizationType: NONE
+        HttpMethod: GET
+        MethodResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              method.response.header.Content-Type: true
+              method.response.header.Content-Length: true
+        Integration:
+          Type: AWS
+          IntegrationHttpMethod: GET
+          Credentials:
+            Fn::GetAtt:
+              - IamRoleApiGatewayS3
+              - Arn
+          Uri:
+            Fn::Join:
+             - ""
+             - - "arn:aws:apigateway:"
+               - Ref: AWS::Region
+               - ":s3:path/"
+               - Ref: S3BucketFrontEnd
+               - "/index.html"
+          IntegrationResponses:
+            - StatusCode: 200
+              ResponseParameters:
+                method.response.header.Content-Type: "integration.response.header.Content-Type"
+                method.response.header.Content-Length: "integration.response.header.Content-Length"
+        ResourceId:
+          Ref: ApiGatewayResourceDefaultRoute
+        RestApiId:
+          Ref: ApiGatewayRestApi
 Outputs:
   S3BucketFrontEndName:
     Value:
