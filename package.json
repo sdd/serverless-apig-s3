@@ -22,10 +22,11 @@
   "homepage": "https://github.com/sdd/serverless-apig-s3#readme",
   "dependencies": {
     "lodash": "^4.17.4",
-    "mmmagic": "^0.4.5",
+    "mime-types": "^2.1.15"
     "pify": "^2.3.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+  },
   "engines": {
     "node": ">=7.6"
   }
