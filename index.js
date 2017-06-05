@@ -53,9 +53,14 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
         if(!withIndex) {
             delete ownResources['Resources']['ApiGatewayMethodIndexGet'];
             delete ownResources['Resources']['ApiGatewayMethodDefaultRouteGet'];
+            delete ownResources['Resources']['ApiGatewayResourceDefaultRoute'];
         }
 
+        const resourceName = get(this.serverless, 'service.custom.apigs3.resourceName', 'assets');
+        ownResources['Resources']['ApiGatewayResourceAssets']['Properties']['PathPart'] = resourceName;
+
         const existing = this.serverless.service.provider.compiledCloudFormationTemplate;
+
         merge(existing, ownResources);
     }
 
