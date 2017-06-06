@@ -1,5 +1,6 @@
 'use strict';
 const { merge } = require('lodash');
+const { get } = require('lodash');
 const path = require('path');
 const ServerlessAWSPlugin = require('./lib/ServerlessAWSPlugin');
 const checkBucketExists = require('./lib/checkBucketExists');
@@ -48,7 +49,18 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
             path.resolve(__dirname, 'resources.yml')
         );
 
+        const withIndex = get(this.serverless, 'service.custom.apigs3.withIndex', true);
+        if(!withIndex) {
+            delete ownResources['Resources']['ApiGatewayMethodIndexGet'];
+            delete ownResources['Resources']['ApiGatewayMethodDefaultRouteGet'];
+            delete ownResources['Resources']['ApiGatewayResourceDefaultRoute'];
+        }
+
+        const resourceName = get(this.serverless, 'service.custom.apigs3.resourceName', 'assets');
+        ownResources['Resources']['ApiGatewayResourceAssets']['Properties']['PathPart'] = resourceName;
+
         const existing = this.serverless.service.provider.compiledCloudFormationTemplate;
+
         merge(existing, ownResources);
     }
 
