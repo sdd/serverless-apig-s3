@@ -1,6 +1,10 @@
 'use strict';
 const { merge } = require('lodash');
 const { get } = require('lodash');
+const { map } = require('lodash');
+const { cloneDeep } = require('lodash');
+const pify = require('pify');
+const fs = pify(require('fs'));
 const path = require('path');
 const ServerlessAWSPlugin = require('./lib/ServerlessAWSPlugin');
 const checkBucketExists = require('./lib/checkBucketExists');
@@ -54,6 +58,35 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
             delete ownResources['Resources']['ApiGatewayMethodIndexGet'];
             delete ownResources['Resources']['ApiGatewayMethodDefaultRouteGet'];
             delete ownResources['Resources']['ApiGatewayResourceDefaultRoute'];
+        }
+
+        const topFiles = get(this.serverless, 'service.custom.apigs3.topFiles', false);
+        if(topFiles) {
+            this.getDistFolder();
+
+            const dirContents = map(await fs.readdir(this.clientPath),
+                name => path.join(this.clientPath, name)
+            );
+
+            await Promise.all(dirContents.map(async item => {
+                const stat = await fs.stat(item);
+                if (!stat.isFile()) return;
+
+                const pathPart = path.basename(item);
+                const routeName = this.aws.naming.getResourceLogicalId(pathPart);
+                const routeId = this.aws.naming.extractResourceId(routeName);
+                const route = cloneDeep(ownResources['Resources']['ApiGatewayResourceAssets']);
+
+                route['Properties']['PathPart'] = pathPart;
+                ownResources['Resources'][routeName] = route;
+
+                const methodName = this.aws.naming.getMethodLogicalId(routeId, 'Get');
+                const method = cloneDeep(ownResources['Resources']['ApiGatewayMethodDefaultRouteGet']);
+
+                method['Properties']['Integration']['Uri']['Fn::Join'][1].splice(4, 1, '/' + pathPart);
+                method['Properties']['ResourceId']['Ref'] = routeName;
+                ownResources['Resources'][methodName] = method;
+            }));
         }
 
         const resourceName = get(this.serverless, 'service.custom.apigs3.resourceName', 'assets');
