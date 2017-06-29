@@ -59,6 +59,12 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
         const resourceName = get(this.serverless, 'service.custom.apigs3.resourceName', 'assets');
         ownResources['Resources']['ApiGatewayResourceAssets']['Properties']['PathPart'] = resourceName;
 
+        const resourcePath = get(this.serverless, 'service.custom.apigs3.resourcePath', '');
+        if (resourcePath) {
+          const method = ownResources['Resources']['ApiGatewayMethodAssetsItemGet'];
+          method['Properties']['Integration']['Uri']['Fn::Join'][1].splice(4, 0, resourcePath);
+        }
+
         const existing = this.serverless.service.provider.compiledCloudFormationTemplate;
 
         merge(existing, ownResources);
