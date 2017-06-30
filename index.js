@@ -68,11 +68,15 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
                 name => path.join(this.clientPath, name)
             );
 
+            const dotFiles = get(this.serverless, 'service.custom.apigs3.dotFiles', false);
+
             await Promise.all(dirContents.map(async item => {
                 const stat = await fs.stat(item);
                 if (!stat.isFile()) return;
 
                 const pathPart = path.basename(item);
+                if (pathPart === 'index.html' || (pathPart[0] === '.' && !dotFiles)) return;
+
                 const routeName = this.aws.naming.getResourceLogicalId(pathPart);
                 const routeId = this.aws.naming.extractResourceId(routeName);
                 const route = cloneDeep(ownResources['Resources']['ApiGatewayResourceAssets']);
