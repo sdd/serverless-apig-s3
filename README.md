@@ -30,7 +30,9 @@ plugins:
 
 custom:
   apigs3:
-    dist: client/dist    # path within service to find content to upload (default: client/dist
+    dist: client/dist    # path within service to find content to upload (default: client/dist)
+    resourceName: static # route path for static assets (default: assets)
+    resourcePath: /dist  # path prefix for assets in s3 bucket (default: '')
 ```
 
 ### Usage
