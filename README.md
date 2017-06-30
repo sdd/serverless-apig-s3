@@ -31,6 +31,7 @@ plugins:
 custom:
   apigs3:
     dist: client/dist    # path within service to find content to upload (default: client/dist
+    topFiles: true       # create routes for top-level files in dist folder (default: false)
 ```
 
 ### Usage
