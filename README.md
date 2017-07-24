@@ -44,8 +44,4 @@ sls deploy    # ensure that sls deploy has been run so that this plugin's resour
 sls client deploy    # uploads client build artifacts to s3
 ```
 
-### Options:
-
-There are none! Seriously though, if you need any, just raise a PR or an Issue.
-
-Something missing? More documentation? All PRs welcome at https://github.com/sdd/serverless-apig-s3
+Something missing? More documentation? All Issues / PRs welcome at https://github.com/sdd/serverless-apig-s3
