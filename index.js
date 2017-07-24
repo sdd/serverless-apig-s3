@@ -1,5 +1,10 @@
 'use strict';
 const { merge } = require('lodash');
+const { get } = require('lodash');
+const { map } = require('lodash');
+const { cloneDeep } = require('lodash');
+const pify = require('pify');
+const fs = pify(require('fs'));
 const path = require('path');
 const ServerlessAWSPlugin = require('./lib/ServerlessAWSPlugin');
 const checkBucketExists = require('./lib/checkBucketExists');
@@ -48,7 +53,57 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
             path.resolve(__dirname, 'resources.yml')
         );
 
+        const withIndex = get(this.serverless, 'service.custom.apigs3.withIndex', true);
+        if(!withIndex) {
+            delete ownResources['Resources']['ApiGatewayMethodIndexGet'];
+            delete ownResources['Resources']['ApiGatewayMethodDefaultRouteGet'];
+            delete ownResources['Resources']['ApiGatewayResourceDefaultRoute'];
+        }
+
+        const topFiles = get(this.serverless, 'service.custom.apigs3.topFiles', false);
+        if(topFiles) {
+            this.getDistFolder();
+
+            const dirContents = map(await fs.readdir(this.clientPath),
+                name => path.join(this.clientPath, name)
+            );
+
+            const dotFiles = get(this.serverless, 'service.custom.apigs3.dotFiles', false);
+
+            await Promise.all(dirContents.map(async item => {
+                const stat = await fs.stat(item);
+                if (!stat.isFile()) return;
+
+                const pathPart = path.basename(item);
+                if (pathPart === 'index.html' || (pathPart[0] === '.' && !dotFiles)) return;
+
+                const routeName = this.aws.naming.getResourceLogicalId(pathPart);
+                const routeId = this.aws.naming.extractResourceId(routeName);
+                const route = cloneDeep(ownResources['Resources']['ApiGatewayResourceAssets']);
+
+                route['Properties']['PathPart'] = pathPart;
+                ownResources['Resources'][routeName] = route;
+
+                const methodName = this.aws.naming.getMethodLogicalId(routeId, 'Get');
+                const method = cloneDeep(ownResources['Resources']['ApiGatewayMethodDefaultRouteGet']);
+
+                method['Properties']['Integration']['Uri']['Fn::Join'][1].splice(4, 1, '/' + pathPart);
+                method['Properties']['ResourceId']['Ref'] = routeName;
+                ownResources['Resources'][methodName] = method;
+            }));
+        }
+
+        const resourceName = get(this.serverless, 'service.custom.apigs3.resourceName', 'assets');
+        ownResources['Resources']['ApiGatewayResourceAssets']['Properties']['PathPart'] = resourceName;
+
+        const resourcePath = get(this.serverless, 'service.custom.apigs3.resourcePath', '');
+        if (resourcePath) {
+          const method = ownResources['Resources']['ApiGatewayMethodAssetsItemGet'];
+          method['Properties']['Integration']['Uri']['Fn::Join'][1].splice(4, 0, resourcePath);
+        }
+
         const existing = this.serverless.service.provider.compiledCloudFormationTemplate;
+
         merge(existing, ownResources);
     }
 
