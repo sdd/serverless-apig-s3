@@ -19,6 +19,8 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
     constructor(serverless, options) {
         super(serverless, options);
 
+        this.stackName = serverless.service.service;
+
         this.commands = {
             client: {
                 usage: 'Deploy client code',
@@ -49,8 +51,8 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
     }
 
     updateIamRoleApiGatewayS3(roleResource, stage) {
-        roleResource[ "Properties" ][ "RoleName" ] = roleResource[ "Properties" ][ "RoleName" ] + "_" + stage;
-        roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + stage;
+        roleResource[ "Properties" ][ "RoleName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "RoleName" ] + "_" + stage;
+        roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + stage;
         return roleResource
     }
 
