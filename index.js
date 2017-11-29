@@ -50,7 +50,7 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
         );
     }
 
-    updateIamRoleApiGatewayS3(roleResource, stage) {
+    updateIamRoleAndPolicyNames(roleResource, stage) {
         roleResource[ "Properties" ][ "RoleName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "RoleName" ] + "_" + stage;
         roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + stage;
         return roleResource
@@ -112,7 +112,7 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
 
         const existing = this.serverless.service.provider.compiledCloudFormationTemplate;
 
-        ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ] = this.updateIamRoleApiGatewayS3(ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ], this.stage);
+        ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ] = this.updateIamRoleAndPolicyNames(ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ], this.stage);
 
         merge(existing, ownResources);
     }
