@@ -19,6 +19,8 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
     constructor(serverless, options) {
         super(serverless, options);
 
+        this.stackName = serverless.service.service;
+
         this.commands = {
             client: {
                 usage: 'Deploy client code',
@@ -46,6 +48,12 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
             uploadFileToBucket,
             uploadFolderToBucket
         );
+    }
+
+    updateIamRoleAndPolicyNames(roleResource, stage) {
+        roleResource[ "Properties" ][ "RoleName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "RoleName" ] + "_" + stage;
+        roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + stage;
+        return roleResource
     }
 
     async mergeApigS3Resources() {
@@ -103,6 +111,8 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
         }
 
         const existing = this.serverless.service.provider.compiledCloudFormationTemplate;
+
+        ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ] = this.updateIamRoleAndPolicyNames(ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ], this.stage);
 
         merge(existing, ownResources);
     }
