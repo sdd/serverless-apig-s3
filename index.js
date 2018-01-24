@@ -57,9 +57,12 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
     }
 
     async mergeApigS3Resources() {
+        const oldCwd = process.cwd();
         const ownResources = await this.serverless.yamlParser.parse(
             path.resolve(__dirname, 'resources.yml')
         );
+
+        process.chdir(oldCwd);
 
         const withIndex = get(this.serverless, 'service.custom.apigs3.withIndex', true);
         if(!withIndex) {
