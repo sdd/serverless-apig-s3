@@ -35,7 +35,7 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
         };
 
         this.hooks = {
-            'before:deploy:createDeploymentArtifacts': () => this.mergeApigS3Resources(),
+            'before:package:createDeploymentArtifacts': () => this.mergeApigS3Resources(),
             'client:client': () => { this.serverless.cli.log(this.commands.client.usage); },
             'client:deploy:deploy': () => this.deploy()
         };
