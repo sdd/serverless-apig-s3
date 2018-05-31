@@ -35,7 +35,7 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
         };
 
         this.hooks = {
-            'before:package:createDeploymentArtifacts': () => this.mergeApigS3Resources(),
+            'before:package:createDeploymentArtifacts': () => { this.updatePopulatedMembers(); this.mergeApigS3Resources(); },
             'client:client': () => { this.serverless.cli.log(this.commands.client.usage); },
             'client:deploy:deploy': () => this.deploy()
         };
@@ -52,8 +52,18 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
 
     updateIamRoleAndPolicyNames(roleResource) {
         roleResource[ "Properties" ][ "RoleName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "RoleName" ] + "_" + this.options.stage;
-        roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + thiis.options.stage;
+        roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + this.options.stage;
         return roleResource
+    }
+
+    updatePopulatedMembers() {
+        const options = this.serverless.processedInput.options;
+        // defined in index.js:22
+        this.stackName = this.serverless.service.service;
+        // defined in lib/ServerlessAWSPlugin.js:10
+        this.stage = options.stage || get(this.serverless, 'service.provider.stage');
+        // defined in lib/ServerlessAWSPlugin.js:11
+        this.region = options.region || get(this.serverless, 'service.provider.region');
     }
 
     async mergeApigS3Resources() {
