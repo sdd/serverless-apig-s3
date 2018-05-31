@@ -52,7 +52,7 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
 
     updateIamRoleAndPolicyNames(roleResource) {
         roleResource[ "Properties" ][ "RoleName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "RoleName" ] + "_" + this.options.stage;
-        roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + thiis.options.stage;
+        roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] = this.stackName + "_" + roleResource[ "Properties" ][ "Policies" ][ 0 ][ "PolicyName" ] + "_" + this.options.stage;
         return roleResource
     }
 
