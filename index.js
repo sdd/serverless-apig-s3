@@ -115,7 +115,7 @@ module.exports = class ServerlessApigS3 extends ServerlessAWSPlugin {
 
         const existing = this.serverless.service.provider.compiledCloudFormationTemplate;
 
-        ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ] = this.updateIamRoleAndPolicyNames(ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ], this.stage);
+        ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ] = this.updateIamRoleAndPolicyNames(ownResources[ "Resources" ][ "IamRoleApiGatewayS3" ], this.serverless.service.provider.stage);
 
         merge(existing, ownResources);
     }
